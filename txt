@@ -1,0 +1,276 @@
+<?php
+session_start();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['item']) && $_POST['item'] !== '') {
+        $item = $_POST['item'];
+        $_SESSION['lista_todo'][] = $item;
+        setcookie('lista_todo', json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+    }
+
+    if (isset($_POST['excluir'])) {
+        if (!empty($_POST['check'])) {
+            foreach ($_POST['check'] as $key => $value) {
+                if (isset($_SESSION['lista_todo'][$key])) {
+                    unset($_SESSION['lista_todo'][$key]);
+                    setcookie("lista_todo", json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                }
+            }
+        }
+    }
+
+    if (isset($_POST['limpa_lista'])) {
+        unset($_SESSION['lista_todo']);
+        setcookie("lista_todo", "", time()-3600);
+    }
+
+    if (isset($_POST['to_do'])) {
+        if (!empty($_POST['check'])) {
+            foreach ($_POST['check'] as $key => $value) {
+                if (isset($_SESSION['lista_doing'][$key])) {
+                    $item = $_SESSION['lista_doing'][$key];
+                    unset($_SESSION['lista_doing'][$key]);
+                    setcookie("lista_doing", json_encode($_SESSION['lista_doing']), time()+20*24*60*60);
+                    $_SESSION['lista_todo'][] = $item;
+                    setcookie('lista_todo', json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                }
+                if (isset($_SESSION['lista_done'][$key])) {
+                    $item = $_SESSION['lista_done'][$key];
+                    unset($_SESSION['lista_done'][$key]);
+                    setcookie("lista_done", json_encode($_SESSION['lista_done']), time()+20*24*60*60);
+                    $_SESSION['lista_todo'][] = $item;
+                    setcookie('lista_todo', json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                }
+            }
+        }
+    }
+
+    if (isset($_POST['doing'])) {
+        if (!empty($_POST['check'])) {
+            foreach ($_POST['check'] as $key => $value) {
+                if (isset($_SESSION['lista_todo'][$key])) {
+                    $item = $_SESSION['lista_todo'][$key];
+                    unset($_SESSION['lista_todo'][$key]);
+                    setcookie("lista_todo", json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                    $_SESSION['lista_doing'][] = $item;
+                    setcookie('lista_doing', json_encode($_SESSION['lista_doing']), time()+20*24*60*60);
+                }
+                if (isset($_SESSION['lista_done'][$key])) {
+                    $item = $_SESSION['lista_done'][$key];
+                    unset($_SESSION['lista_done'][$key]);
+                    setcookie("lista_done", json_encode($_SESSION['lista_done']), time()+20*24*60*60);
+                    $_SESSION['lista_doing'][] = $item;
+                    setcookie('lista_doing', json_encode($_SESSION['lista_doing']), time()+20*24*60*60);
+                }
+            }
+        }
+    }
+
+    if (isset($_POST['done'])) {
+        if (!empty($_POST['check'])) {
+            foreach ($_POST['check'] as $key => $value) {
+                if (isset($_SESSION['lista_todo'][$key])) {
+                    $item = $_SESSION['lista_todo'][$key];
+                    unset($_SESSION['lista_todo'][$key]);
+                    setcookie("lista_todo", json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                    $_SESSION['lista_done'][] = $item;
+                    setcookie('lista_done', json_encode($_SESSION['lista_done']), time()+20*24*60*60);
+                }
+                if (isset($_SESSION['lista_doing'][$key])) {
+                    $item = $_SESSION['lista_doing'][$key];
+                    unset($_SESSION['lista_doing'][$key]);
+                    setcookie("lista_doing", json_encode($_SESSION['lista_doing']), time()+20*24*60*60);
+                    $_SESSION['lista_done'][] = $item;
+                    setcookie('lista_done', json_encode($_SESSION['lista_done']), time()+20*24*60*60);
+                }
+            }
+        }
+    }
+
+    header("Location: {$_SERVER['PHP_SELF']}");
+    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAVI - LISTA DE TAREFAS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <center>
+        <h1>BAVI</h1>
+        
+        <div id="adicionar_item">
+            <form action="index.php" method="post">
+                <input type="text" name="item" placeholder="Digite o item">
+                <input type="submit" value="Adicionar à lista">
+            </form>
+        </div>
+        <div id="botao_limpar">
+        <form action="index.php"method="post">
+            <input type="submit" name="limpa_lista" value="Limpar toda a lista">
+        </form>
+    </div>
+        <div class="board">
+            <div id="to_do" class="column">
+                <h2>A Fazer</h2>
+                <form action="index.php" method="post">
+                    <ul>
+                        <?php
+                        if (!empty($_SESSION['lista_todo'])) {
+                            foreach ($_SESSION['lista_todo'] as $key => $item) {
+                                echo "<li>";
+                                echo "<input type='checkbox' name='check[$key]' value='1'>";
+                                echo "<label>$item</label>";
+                                echo "</li>";
+                            }
+                        } else {
+                            echo "<li>Nenhum item na lista.</li>";
+                        }
+                        ?>
+                    </ul>
+                    <input type="submit" name="to_do" value="Mover para Fazer">
+                    <input type="submit" name="doing" value="Mover para Fazendo">
+                    <input type="submit" name="done" value="Mover para Feito">
+                </form>
+            </div>
+            <div id="doing" class="column">
+                <h2>Fazendo</h2>
+                <form action="index.php" method="post">
+                    <ul>
+                        <?php
+                        if (!empty($_SESSION['lista_doing'])) {
+                            foreach ($_SESSION['lista_doing'] as $key => $item) {
+                                echo "<li>";
+                                echo "<input type='checkbox' name='check[$key]' value='1'>";
+                                echo "<label>$item</label>";
+                                echo "</li>";
+                            }
+                        } else {
+                            echo "<li>Nenhum item na lista.</li>";
+                        }
+                        ?>
+                    </ul>
+                    <input type="submit" name="doing" value="Mover para fazer">
+                    <input type="submit" name="done" value="Mover para Feito">
+                </form>
+            </div>
+            <div id="done" class="column"
+                 h2>Feito</h2>
+                <form action="index.php" method="post">
+                    <ul>
+                        <?php
+                        if (!empty($_SESSION['lista_doing'])) {
+                            foreach ($_SESSION['lista_doing'] as $key => $item) {
+                                echo "<li>";
+                                echo "<input type='checkbox' name='check[$key]' value='1'>";
+                                echo "<label>$item</label>";
+                                echo "</li>";
+                            }
+                        } else {
+                            echo "<li>Nenhum item na lista.</li>";
+                        }
+                        ?>
+                    </ul>
+                    <input type="submit" name="doing" value="Mover para Fazer">
+                    <input type="submit" name="done" value="Mover para Feito">
+                </form>
+            </div>
+            <?php
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['item']) && $_POST['item'] !== '') {
+        $item = $_POST['item'];
+        $_SESSION['lista_todo'][] = $item;
+        setcookie('lista_todo', json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+    }
+
+    if (isset($_POST['excluir'])) {
+        if (!empty($_POST['check'])) {
+            foreach ($_POST['check'] as $key => $value) {
+                if (isset($_SESSION['lista_todo'][$key])) {
+                    unset($_SESSION['lista_todo'][$key]);
+                    setcookie("lista_todo", json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                }
+            }
+        }
+    }
+
+    if (isset($_POST['limpa_lista'])) {
+        unset($_SESSION['lista_todo']);
+        setcookie("lista_todo", "", time()-3600);
+    }
+
+    if (isset($_POST['to_do'])) {
+        if (!empty($_POST['check'])) {
+            foreach ($_POST['check'] as $key => $value) {
+                if (isset($_SESSION['lista_doing'][$key])) {
+                    $item = $_SESSION['lista_doing'][$key];
+                    unset($_SESSION['lista_doing'][$key]);
+                    setcookie("lista_doing", json_encode($_SESSION['lista_doing']), time()+20*24*60*60);
+                    $_SESSION['lista_todo'][] = $item;
+                    setcookie('lista_todo', json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                }
+                if (isset($_SESSION['lista_done'][$key])) {
+                    $item = $_SESSION['lista_done'][$key];
+                    unset($_SESSION['lista_done'][$key]);
+                    setcookie("lista_done", json_encode($_SESSION['lista_done']), time()+20*24*60*60);
+                    $_SESSION['lista_todo'][] = $item;
+                    setcookie('lista_todo', json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                }
+            }
+        }
+    }
+
+    if (isset($_POST['doing'])) {
+        if (!empty($_POST['check'])) {
+            foreach ($_POST['check'] as $key => $value) {
+                if (isset($_SESSION['lista_todo'][$key])) {
+                    $item = $_SESSION['lista_todo'][$key];
+                    unset($_SESSION['lista_todo'][$key]);
+                    setcookie("lista_todo", json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                    $_SESSION['lista_doing'][] = $item;
+                    setcookie('lista_doing', json_encode($_SESSION['lista_doing']), time()+20*24*60*60);
+                }
+                if (isset($_SESSION['lista_done'][$key])) {
+                    $item = $_SESSION['lista_done'][$key];
+                    unset($_SESSION['lista_done'][$key]);
+                    setcookie("lista_done", json_encode($_SESSION['lista_done']), time()+20*24*60*60);
+                    $_SESSION['lista_doing'][] = $item;
+                    setcookie('lista_doing', json_encode($_SESSION['lista_doing']), time()+20*24*60*60);
+                }
+            }
+        }
+    }
+
+    if (isset($_POST['done'])) {
+        if (!empty($_POST['check'])) {
+            foreach ($_POST['check'] as $key => $value) {
+                if (isset($_SESSION['lista_todo'][$key])) {
+                    $item = $_SESSION['lista_todo'][$key];
+                    unset($_SESSION['lista_todo'][$key]);
+                    setcookie("lista_todo", json_encode($_SESSION['lista_todo']), time()+20*24*60*60);
+                    $_SESSION['lista_done'][] = $item;
+                    setcookie('lista_done', json_encode($_SESSION['lista_done']), time()+20*24*60*60);
+                }
+                if (isset($_SESSION['lista_doing'][$key])) {
+                    $item = $_SESSION['lista_doing'][$key];
+                    unset($_SESSION['lista_doing'][$key]);
+                    setcookie("lista_doing", json_encode($_SESSION['lista_doing']), time()+20*24*60*60);
+                    $_SESSION['lista_done'][] = $item;
+                    setcookie('lista_done', json_encode($_SESSION['lista_done']), time()+20*24*60*60);
+                }
+            }
+        }
+    }
+
+    header("Location: {$_SERVER['PHP_SELF']}");
+    exit();
+}
+?>
+
